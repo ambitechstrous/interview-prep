@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"test-golang-concurrency/internal/atomic"
 	"test-golang-concurrency/internal/client"
+	"test-golang-concurrency/internal/worker"
 
 	"github.com/google/uuid"
 )
@@ -108,4 +110,15 @@ func main() {
 		data := <-buffered
 		fmt.Printf("got data %s\n", data)
 	}
+
+	// Test processor with channel logic and context select
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	processor := worker.NewJobProcessor()
+
+	jobs := make(chan int)
+	go processor.StartWorker(ctx, jobs)
+	processor.TriggerJob(jobs, 2)
+	processor.TriggerJob(jobs, 3)
 }
